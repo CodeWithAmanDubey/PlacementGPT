@@ -1,0 +1,110 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String   @id @default(cuid())
+  clerkId    String   @unique
+  name       String?
+  email      String   @unique
+  college    String?
+  branch     String?
+  cgpa       Float?
+  targetRole String?
+  
+  resumes    ResumeAnalysis[]
+  jobAnalyses JobAnalysis[]
+  interviewSessions InterviewSession[]
+  score      JobReadinessScore?
+  scoreHistory JobReadinessHistory[]
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model ResumeAnalysis {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  fileName        String?
+  fileUrl         String?
+  rawText         String?
+  atsScore        Int?
+  status          String   @default("UPLOADED") // UPLOADED, ANALYZED
+  missingKeywords String[]
+  suggestions     String[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model InterviewSession {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  role       String?
+  company    String?
+  difficulty String?
+  
+  questions  Json?
+  answers    Json?
+  
+  score      Float?
+  feedback   String?
+  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model JobAnalysis {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  jobTitle        String
+  companyName     String
+  jobDescription  String
+  matchScore      Int
+  skillMatch      Int      @default(0)
+  experienceMatch Int      @default(0)
+  projectMatch    Int      @default(0)
+  educationMatch  Int      @default(0)
+  roleInsights    String[]
+  missingSkills   Json
+  strengths       String[]
+  learningRoadmap Json
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model JobReadinessScore {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  overallScore Int      @default(0)
+  breakdown    Json?
+  recommendations Json?
+  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model JobReadinessHistory {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  overallScore Int
+  createdAt    DateTime @default(now())
+}
